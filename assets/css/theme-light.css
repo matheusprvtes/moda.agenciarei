@@ -1,0 +1,164 @@
+/* =========================================================
+   TEMA CLARO (teste) — fundo branco
+   Carregue depois de styles.css e adicione data-theme="light"
+   na tag <html>. Sem o atributo, este arquivo é inerte.
+
+   Não é uma inversão automática: o dourado da marca perde
+   contraste sobre branco, então texto e bordas usam tons mais
+   fechados do próprio âmbar, e o gradiente dos botões (com
+   texto #0A0A0A) é mantido igual ao da identidade.
+   ========================================================= */
+
+:root[data-theme="light"] {
+  /* Fundos */
+  --bg-base: #FFFFFF;
+  --bg-elevated: #F5F6FA;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FFFFFF;
+  --bg-glass: rgba(255, 255, 255, 0.82);
+
+  /* Bordas */
+  --border-subtle: rgba(14, 16, 25, 0.09);
+  --border-mid: rgba(14, 16, 25, 0.16);
+  --border-glow: rgba(255, 138, 0, 0.55);
+
+  /* Texto — a navy da marca como tinta principal */
+  --text-primary: #0E1A4C;
+  --text-secondary: #454B63;
+  --text-muted: #6B7088;
+  --text-faded: #8A8FA3;
+
+  /* Âmbar fechado para texto pequeno sobre branco (contraste AA) */
+  --gold-ink: #A35A00;
+
+  /* Gradientes */
+  --gradient-card: linear-gradient(180deg, #FFFFFF 0%, #FBFBFD 100%);
+  --gradient-text: linear-gradient(135deg, #FF9500 0%, #F06400 55%, #D94A00 100%);
+  --gradient-border: linear-gradient(135deg, rgba(255,138,0,.55), rgba(124,58,237,.28), rgba(6,182,212,.28));
+
+  /* Sombras suaves — as do tema escuro ficam pesadas no branco */
+  --shadow-sm: 0 1px 2px rgba(14, 26, 76, .06);
+  --shadow-md: 0 10px 26px -12px rgba(14, 26, 76, .18);
+  --shadow-lg: 0 28px 60px -28px rgba(14, 26, 76, .28);
+  --glow-gold: 0 0 34px rgba(255, 138, 0, .28);
+}
+
+/* ---------- Camadas de fundo ---------- */
+:root[data-theme="light"] .bg-grid {
+  background-image:
+    linear-gradient(rgba(14, 16, 25, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 16, 25, .05) 1px, transparent 1px);
+}
+:root[data-theme="light"] .orb { opacity: .38; filter: blur(90px); }
+:root[data-theme="light"] .orb--gold { background: rgba(255, 184, 0, .35); }
+:root[data-theme="light"] .orb--violet { background: rgba(124, 58, 237, .16); }
+:root[data-theme="light"] .orb--cyan { background: rgba(6, 182, 212, .14); }
+:root[data-theme="light"] .bg-noise { opacity: .022; mix-blend-mode: multiply; }
+
+/* ---------- Elementos de marca ---------- */
+:root[data-theme="light"] .eyebrow {
+  color: var(--gold-ink);
+  background: rgba(255, 184, 0, .14);
+  border-color: rgba(255, 138, 0, .32);
+}
+:root[data-theme="light"] .pillar__tag,
+:root[data-theme="light"] .footer h3 { color: var(--gold-ink); }
+
+:root[data-theme="light"] ::selection { background: rgba(255, 149, 0, .3); color: var(--text-primary); }
+
+/* ---------- Navbar ---------- */
+:root[data-theme="light"] .nav[data-state="scrolled"] {
+  background: rgba(255, 255, 255, .85);
+  box-shadow: 0 1px 0 rgba(14, 16, 25, .06);
+}
+:root[data-theme="light"] .nav__toggle {
+  background: #FFFFFF;
+  border-color: var(--border-mid);
+  box-shadow: var(--shadow-sm);
+}
+:root[data-theme="light"] .nav__toggle span { background: var(--text-primary); }
+:root[data-theme="light"] .nav__drawer { background: rgba(255, 255, 255, .96); }
+
+/* O logo troca no HTML (logo-agencia-rei-light: coroa dourada + texto navy),
+   nunca por filtro de cor. */
+
+/* A cena do hero é uma foto de estúdio clara: no tema claro a moldura
+   escura some e a peça se integra ao fundo branco. */
+:root[data-theme="light"] .hero__scene {
+  border-color: rgba(14, 16, 25, .1);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---------- Superfícies ---------- */
+:root[data-theme="light"] .section--elevated {
+  background: linear-gradient(180deg, transparent, var(--bg-elevated) 10%, var(--bg-elevated) 90%, transparent);
+}
+:root[data-theme="light"] .card {
+  background: var(--gradient-card);
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+:root[data-theme="light"] .card:hover {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-md);
+}
+:root[data-theme="light"] .step { background: #FFFFFF; box-shadow: var(--shadow-sm); }
+:root[data-theme="light"] .step__n {
+  background: rgba(255, 184, 0, .16);
+  border-color: rgba(255, 138, 0, .4);
+  color: var(--gold-ink);
+}
+:root[data-theme="light"] .note { color: var(--text-primary); border-left-color: var(--gold-dark); }
+
+:root[data-theme="light"] .hero__badge,
+:root[data-theme="light"] .form-card,
+:root[data-theme="light"] .cookie {
+  background: rgba(255, 255, 255, .92);
+  border-color: var(--border-mid);
+}
+:root[data-theme="light"] .sticky-cta {
+  background: rgba(255, 255, 255, .92);
+  border-top-color: var(--border-subtle);
+}
+
+/* ---------- Botões ---------- */
+:root[data-theme="light"] .btn--ghost {
+  background: #FFFFFF;
+  border-color: var(--border-mid);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+:root[data-theme="light"] .btn--ghost:hover { background: #FBFBFD; border-color: var(--border-glow); }
+:root[data-theme="light"] .btn--primary { box-shadow: 0 10px 26px -10px rgba(255, 138, 0, .6); }
+
+/* ---------- Formulário ---------- */
+:root[data-theme="light"] .field input,
+:root[data-theme="light"] .field select {
+  background: #FFFFFF;
+  border-color: var(--border-mid);
+}
+:root[data-theme="light"] .field input:focus,
+:root[data-theme="light"] .field select:focus {
+  background: #FFFFFF;
+  border-color: var(--gold-dark);
+  box-shadow: 0 0 0 4px rgba(255, 138, 0, .14);
+}
+:root[data-theme="light"] .field input:focus + label,
+:root[data-theme="light"] .field input:not(:placeholder-shown) + label,
+:root[data-theme="light"] .field select:focus + label,
+:root[data-theme="light"] .field select.has-value + label { color: var(--gold-ink); }
+:root[data-theme="light"] .consent a,
+:root[data-theme="light"] .cookie a,
+:root[data-theme="light"] .footer__col a:hover,
+:root[data-theme="light"] .nav__links a.is-active { color: var(--gold-ink); }
+:root[data-theme="light"] .form-alert {
+  background: rgba(239, 68, 68, .08);
+  border-color: rgba(239, 68, 68, .3);
+  color: #B42318;
+}
+
+/* ---------- Rodapé ---------- */
+:root[data-theme="light"] .footer {
+  background: var(--bg-elevated);
+  border-top-color: var(--border-subtle);
+}
