@@ -119,9 +119,21 @@ var CONFIG = {
      O laço de animação só roda enquanto o hero está visível. */
   var scene = $("#heroScene");
   if (scene && !reduce) {
-    var bags = $$(".hero__bag", scene);
-    var pointer = { x: 0, y: 0 };      // -1..1 em relação ao centro da cena
-    var strength = 0;                   // fator suavizado
+    // Cada bolsa guarda o próprio estado: a reação ao mouse é individual,
+    // baseada na distância do ponteiro até aquela bolsa.
+    var bags = $$(".hero__bag", scene).map(function (el, i) {
+      return {
+        el: el,
+        i: i,
+        depth: parseFloat(el.getAttribute("data-depth")) || 1,
+        cx: 0, cy: 0, radius: 1,   // geometria (recalculada em measure)
+        zoom: 0,                    // proximidade suavizada 0..1
+        target: 0                   // proximidade desejada neste instante
+      };
+    });
+
+    var pointer = { x: null, y: null };   // em coordenadas da viewport
+    var strength = 0;
     var targetStrength = 0;
     var running = false;
     var startedAt = 0;
@@ -131,6 +143,14 @@ var CONFIG = {
       var vh = window.innerHeight || document.documentElement.clientHeight;
       var visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
       targetStrength = Math.max(0, Math.min(1, visible / Math.min(rect.height, vh)));
+
+      // centro e raio de influência de cada bolsa (offset* ignora transforms)
+      bags.forEach(function (b) {
+        b.cx = rect.left + b.el.offsetLeft + b.el.offsetWidth / 2;
+        b.cy = rect.top + b.el.offsetTop + b.el.offsetHeight / 2;
+        b.radius = Math.max(b.el.offsetWidth, b.el.offsetHeight) * 0.95;
+      });
+
       if (targetStrength > 0.02 && !running) { running = true; requestAnimationFrame(frame); }
     }
 
@@ -138,29 +158,37 @@ var CONFIG = {
       if (!startedAt) startedAt = ts;
       var t = (ts - startedAt) / 1000;
 
-      strength += (targetStrength - strength) * 0.08;   // aproximação suave
+      strength += (targetStrength - strength) * 0.08;
 
       for (var i = 0; i < bags.length; i++) {
-        var bag = bags[i];
-        var depth = parseFloat(bag.getAttribute("data-depth")) || 1;
+        var b = bags[i];
 
-        var floatX = Math.sin(t * 0.55 + i * 2.1) * 7 * depth;    // flutuação contínua
-        var floatY = Math.cos(t * 0.42 + i * 1.4) * 10 * depth;
-        var moveX = pointer.x * 22 * depth;                        // resposta ao ponteiro
-        var moveY = pointer.y * 16 * depth;
+        // proximidade do ponteiro a ESTA bolsa (0 = longe, 1 = em cima)
+        b.target = 0;
+        if (pointer.x !== null) {
+          var dist = Math.hypot(pointer.x - b.cx, pointer.y - b.cy);
+          var p = 1 - dist / b.radius;
+          b.target = p > 0 ? p * p * (3 - 2 * p) : 0;   // suavização smoothstep
+        }
+        // cada bolsa converge no seu próprio ritmo — entra e sai do zoom sozinha
+        b.zoom += (b.target - b.zoom) * 0.07;
 
-        var tx = (floatX + moveX) * strength;
-        var ty = (floatY + moveY) * strength;
-        var rot = (pointer.x * 4 * depth + Math.sin(t * 0.4 + i) * 1.6 * depth) * strength;
-        var sc = 1 + 0.035 * depth * strength;
+        // flutuação contínua (inalterada), cada uma com sua fase
+        var floatX = Math.sin(t * 0.55 + i * 2.1) * 7 * b.depth;
+        var floatY = Math.cos(t * 0.42 + i * 1.4) * 10 * b.depth;
+        var rot = Math.sin(t * 0.4 + i) * 1.6 * b.depth * strength;
 
-        bag.style.setProperty("--tx", tx.toFixed(2) + "px");
-        bag.style.setProperty("--ty", ty.toFixed(2) + "px");
-        bag.style.setProperty("--rot", rot.toFixed(2) + "deg");
-        bag.style.setProperty("--sc", sc.toFixed(4));
-        bag.style.setProperty("--sh-y", (10 * depth * strength).toFixed(1) + "px");
-        bag.style.setProperty("--sh-b", (18 * depth * strength).toFixed(1) + "px");
-        bag.style.setProperty("--sh-a", (0.18 * strength).toFixed(3));
+        // zoom in ao aproximar, zoom out ao afastar — sem deslocamento
+        var sc = 1 + (0.035 * b.depth + 0.14 * b.zoom) * strength;
+
+        b.el.style.setProperty("--tx", (floatX * strength).toFixed(2) + "px");
+        b.el.style.setProperty("--ty", (floatY * strength).toFixed(2) + "px");
+        b.el.style.setProperty("--rot", rot.toFixed(2) + "deg");
+        b.el.style.setProperty("--sc", sc.toFixed(4));
+        // a sombra acompanha o zoom, reforçando a sensação de aproximar
+        b.el.style.setProperty("--sh-y", ((10 * b.depth + 14 * b.zoom) * strength).toFixed(1) + "px");
+        b.el.style.setProperty("--sh-b", ((18 * b.depth + 22 * b.zoom) * strength).toFixed(1) + "px");
+        b.el.style.setProperty("--sh-a", ((0.18 + 0.14 * b.zoom) * strength).toFixed(3));
       }
 
       if (strength < 0.005 && targetStrength < 0.02) {
@@ -168,9 +196,10 @@ var CONFIG = {
         running = false;
         startedAt = 0;
         scene.classList.remove("is-floating");
-        bags.forEach(function (bag) {
+        bags.forEach(function (b) {
+          b.zoom = 0;
           ["--tx", "--ty", "--rot", "--sc", "--sh-y", "--sh-b", "--sh-a"].forEach(function (p) {
-            bag.style.removeProperty(p);
+            b.el.style.removeProperty(p);
           });
         });
         return;
@@ -180,12 +209,14 @@ var CONFIG = {
       requestAnimationFrame(frame);
     }
 
-    scene.addEventListener("mousemove", function (e) {
-      var r = scene.getBoundingClientRect();
-      pointer.x = ((e.clientX - r.left) / r.width - 0.5) * 2;
-      pointer.y = ((e.clientY - r.top) / r.height - 0.5) * 2;
+    // O ponteiro é acompanhado na seção inteira: a bolsa reage quando o mouse
+    // passa perto dela, mesmo que ainda não esteja sobre a imagem.
+    var heroSection = scene.closest(".hero") || scene;
+    heroSection.addEventListener("mousemove", function (e) {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
     });
-    scene.addEventListener("mouseleave", function () { pointer.x = 0; pointer.y = 0; });
+    heroSection.addEventListener("mouseleave", function () { pointer.x = null; pointer.y = null; });
 
     window.addEventListener("scroll", measure, { passive: true });
     window.addEventListener("resize", measure);
